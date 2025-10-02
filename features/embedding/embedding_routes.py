@@ -43,7 +43,7 @@ async def embed_image_route(filename: str, request: EmbedImageRequest):
     try:
         process_image(
             filename=filename,
-            image_path="../zen/" + request.image_path,
+            image_path=request.image_path,
             width=request.width,
             height=request.height,
             aspect_ratio=request.aspect_ratio,
