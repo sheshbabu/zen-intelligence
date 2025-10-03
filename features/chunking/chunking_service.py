@@ -40,8 +40,6 @@ def split_by_semantic_similarity(content: str) -> List[str]:
 
     logging.debug(f"Starting semantic splitting with {len(sentences)} sentences")
 
-    embeddings = embed_texts(sentences)
-
     chunks = []
     current_chunk = []
 
@@ -54,7 +52,8 @@ def split_by_semantic_similarity(content: str) -> List[str]:
             should_break_chunk = True
 
         if i < len(sentences) - 1:
-            similarity = cosine_similarity(np.array([embeddings[i]]), np.array([embeddings[i + 1]]))[0][0]
+            embeddings = embed_texts([sentences[i], sentences[i + 1]])
+            similarity = cosine_similarity(np.array([embeddings[0]]), np.array([embeddings[1]]))[0][0]
             if similarity < CHUNK_BREAK_THRESHOLD:
                 should_break_chunk = True
 
