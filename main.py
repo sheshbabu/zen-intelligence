@@ -1,14 +1,20 @@
 import os
+import logging
 import uvicorn
 from fastapi import FastAPI, HTTPException
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
+
 from features.embedding.embedding_routes import router as embedding_router
 from features.search.search_routes import router as search_router
+from features.similarity.similarity_routes import router as similarity_router
 from commons.qdrant.qdrant_client import health_check
 
 app = FastAPI(title="Zen Intelligence", version="0.1.0")
 
 app.include_router(embedding_router)
 app.include_router(search_router)
+app.include_router(similarity_router)
 
 @app.get("/health")
 async def health():

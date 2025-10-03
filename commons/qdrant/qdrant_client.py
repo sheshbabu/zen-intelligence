@@ -26,8 +26,28 @@ def upsert_points(collection_name: str, points: List[Dict[str, Any]]) -> None:
     logging.debug(f"Upserted {len(points)} points to {collection_name}")
 
 
-def search_similar(collection_name: str, query_vector: List[float], limit: int = 20, score_threshold: float = 0.5) -> List[Dict[str, Any]]:
-    results = client.search(collection_name=collection_name, query_vector=query_vector, limit=limit, score_threshold=score_threshold)
+def search_similar(collection_name: str, query_vector: List[float], limit: int = 20, threshold: float = 0.5) -> List[Dict[str, Any]]:
+    results = client.search(collection_name=collection_name, query_vector=query_vector, limit=limit, score_threshold=threshold)
+    return [
+        {
+            "id": str(result.id),
+            "score": float(result.score),
+            "payload": result.payload or {},
+        }
+        for result in results
+    ]
+
+
+def search_similar_with_filter(collection_name: str, query_vector: List[float], filter: Dict[str, Any], limit: int = 20, threshold: float = 0.5) -> List[Dict[str, Any]]:
+    if not filter:
+        return search_similar(collection_name, query_vector, limit, threshold)
+
+    search_filter = Filter(must=[
+        FieldCondition(key=key, match=MatchValue(value=value))
+        for key, value in filter.items()
+    ])
+
+    results = client.search(collection_name=collection_name, query_vector=query_vector, query_filter=search_filter, limit=limit, score_threshold=threshold)
     return [
         {
             "id": str(result.id),
@@ -49,16 +69,16 @@ def delete_points_by_filter(collection_name: str, filter_conditions: Dict[str, A
     logging.debug(f"Deleted {len(point_ids)} points from {collection_name}")
 
 
-def scroll_points(collection_name: str, filter_conditions: Dict[str, Any], limit: int = 100) -> List[Dict[str, Any]]:
+def scroll_points(collection_name: str, filter_conditions: Dict[str, Any], limit: int = 100, with_vectors: bool = False) -> List[Dict[str, Any]]:
     search_filter = Filter(must=[
         FieldCondition(key=key, match=MatchValue(value=value))
         for key, value in filter_conditions.items()
     ])
 
-    results, _ = client.scroll(collection_name=collection_name, scroll_filter=search_filter, limit=limit, with_payload=True)
+    results, _ = client.scroll(collection_name=collection_name, scroll_filter=search_filter, limit=limit, with_payload=True, with_vectors=with_vectors)
 
     return [
-        {"id": str(result.id), "payload": result.payload or {}}
+        {"id": str(result.id), "payload": result.payload or {}, "vector": result.vector if with_vectors else None}
         for result in results
     ]
 

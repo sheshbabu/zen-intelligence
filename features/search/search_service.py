@@ -5,7 +5,7 @@ from commons.qdrant.qdrant_client import search_similar
 
 NOTE_COLLECTION = "notes_v1"
 IMAGE_COLLECTION = "images_v1"
-NOTE_SCORE_THRESHOLD = 0.5
+NOTE_SCORE_THRESHOLD = 0.55
 IMAGE_SCORE_THRESHOLD = 0.25
 
 
@@ -32,7 +32,7 @@ class ImageSearchResult(TypedDict):
 def search_notes(query: str, limit: int = 20) -> List[NoteSearchResult]:
     query_vector = embed_text(query)
 
-    results = search_similar(collection_name=NOTE_COLLECTION, query_vector=query_vector, limit=limit, score_threshold=NOTE_SCORE_THRESHOLD)
+    results = search_similar(collection_name=NOTE_COLLECTION, query_vector=query_vector, limit=limit, threshold=NOTE_SCORE_THRESHOLD)
 
     note_map = {}
     for result in results:
@@ -61,7 +61,7 @@ def search_notes(query: str, limit: int = 20) -> List[NoteSearchResult]:
 def search_images(query: str, limit: int = 20) -> List[ImageSearchResult]:
     query_vector = embed_query_for_images(query)
 
-    results = search_similar(collection_name=IMAGE_COLLECTION, query_vector=query_vector, limit=limit, score_threshold=IMAGE_SCORE_THRESHOLD)
+    results = search_similar(collection_name=IMAGE_COLLECTION, query_vector=query_vector, limit=limit, threshold=IMAGE_SCORE_THRESHOLD)
 
     image_map = {}
     for result in results:
