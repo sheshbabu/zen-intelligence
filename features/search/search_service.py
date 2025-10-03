@@ -30,6 +30,9 @@ class ImageSearchResult(TypedDict):
 
 
 def search_notes(query: str, limit: int = 20) -> List[NoteSearchResult]:
+    if len(query.strip()) < 3:
+        return []
+
     query_vector = embed_text(query)
 
     results = search_similar(collection_name=NOTE_COLLECTION, query_vector=query_vector, limit=limit, threshold=NOTE_SCORE_THRESHOLD)
@@ -59,6 +62,9 @@ def search_notes(query: str, limit: int = 20) -> List[NoteSearchResult]:
     return matches
 
 def search_images(query: str, limit: int = 20) -> List[ImageSearchResult]:
+    if len(query.strip()) < 3:
+        return []
+
     query_vector = embed_query_for_images(query)
 
     results = search_similar(collection_name=IMAGE_COLLECTION, query_vector=query_vector, limit=limit, threshold=IMAGE_SCORE_THRESHOLD)
