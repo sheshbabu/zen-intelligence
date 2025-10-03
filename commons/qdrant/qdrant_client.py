@@ -6,7 +6,7 @@ from qdrant_client.models import (Distance, VectorParams, PointStruct, Filter, F
 
 
 url = os.getenv("QDRANT_URL", "http://localhost:6333")
-client = QdrantClient(url=url, timeout=0.5)
+client = QdrantClient(url=url, timeout=30)
 
 
 def create_collection_if_not_exists(collection_name: str, vector_size: int) -> None:
