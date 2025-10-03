@@ -2,14 +2,14 @@
 
 Semantic intelligence service for Zen Notes
 
-## Setup
+### Setup
 
 1. Install dependencies:
 ```bash
 make init
 ```
 
-2. Start Qdrant (vector database):
+2. Start Qdrant:
 ```bash
 make qdrant
 ```
