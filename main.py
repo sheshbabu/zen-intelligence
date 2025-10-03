@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from features.embedding.embedding_routes import router as embedding_router
 from features.search.search_routes import router as search_router
