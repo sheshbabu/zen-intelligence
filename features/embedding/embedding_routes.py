@@ -1,5 +1,6 @@
 import logging
-from typing import List, Optional
+import time
+from typing import List
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from features.embedding.embedding_service import (process_note, process_image, delete_note_embeddings, delete_image_embeddings)
@@ -31,7 +32,10 @@ class SearchRequest(BaseModel):
 @router.post("/embed/notes/{note_id}")
 async def embed_note_route(note_id: int, request: EmbedNoteRequest):
     try:
+        start = time.time()
         process_note(note_id=note_id, title=request.title, content=request.content, tags=request.tags, updated_at=request.updated_at)
+        elapsed = time.time() - start
+        logging.info(f"embedded note: {request.title} ({elapsed:.2f}s)")
         return {"success": True}
     except Exception as e:
         logging.error(f"failed to embed note {note_id}: {e}")
@@ -41,6 +45,7 @@ async def embed_note_route(note_id: int, request: EmbedNoteRequest):
 @router.post("/embed/images/{filename}")
 async def embed_image_route(filename: str, request: EmbedImageRequest):
     try:
+        start = time.time()
         process_image(
             filename=filename,
             image_path=request.image_path,
@@ -50,6 +55,8 @@ async def embed_image_route(filename: str, request: EmbedImageRequest):
             file_size=request.file_size,
             format=request.format
         )
+        elapsed = time.time() - start
+        logging.info(f"embedded image: {filename} ({elapsed:.2f}s)")
         return {"success": True}
     except Exception as e:
         logging.error(f"failed to embed image {filename}: {e}")
