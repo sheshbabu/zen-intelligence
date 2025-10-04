@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, Query
-from features.similarity.similarity_service import find_similar_notes
+from features.similarity.similarity_service import find_similar_notes, find_similar_images
 
 
 router = APIRouter()
@@ -13,4 +13,14 @@ async def find_similar_notes_route(note_id: int, limit: int = 10, threshold: flo
         return {"results": results}
     except Exception as e:
         logging.error(f"failed to find similar notes for note {note_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/similarity/images/{filename}")
+async def find_similar_images_route(filename: str, limit: int = 10, threshold: float = 0.5):
+    try:
+        results = find_similar_images(filename=filename, limit=limit, threshold=threshold)
+        return {"results": results}
+    except Exception as e:
+        logging.error(f"failed to find similar images for {filename}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

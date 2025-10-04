@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, TypedDict, Dict, Any
 from sklearn.cluster import DBSCAN
 from commons.qdrant.qdrant_client import scroll_points, search_similar
-from commons.qdrant.qdrant_helper import NOTE_COLLECTION
+from commons.qdrant.qdrant_helper import NOTE_COLLECTION, IMAGE_COLLECTION
 
 
 OUTLIER_SCORE_THRESHOLD = 0.5
@@ -187,4 +187,61 @@ def find_outlier_chunks(chunks: List[Dict[str, Any]], eps: float = 0.3, min_samp
 
     results.sort(key=lambda x: x["outlier_score"], reverse=True)
 
+    return results
+
+
+class SimilarImageResult(TypedDict):
+    filename: str
+    score: float
+    width: int | None
+    height: int | None
+    aspectRatio: float | None
+    fileSize: int | None
+    format: str | None
+
+
+def find_similar_images(filename: str, limit: int = 10, threshold: float = 0.5) -> List[SimilarImageResult]:
+    source_images = scroll_points(IMAGE_COLLECTION, {"filename": filename}, limit=1, with_vectors=True)
+
+    if not source_images:
+        logging.warning(f"Image not found: {filename}")
+        return []
+
+    source_image = source_images[0]
+    vector = source_image["vector"]
+
+    if not vector:
+        logging.error(f"Image {filename} has no vector")
+        return []
+
+    logging.debug(f"Finding similar images for {filename}")
+
+    similar_images = search_similar(
+        collection_name=IMAGE_COLLECTION,
+        query_vector=vector,
+        limit=limit + 1,
+        threshold=threshold
+    )
+
+    results = []
+    for result in similar_images:
+        payload = result["payload"]
+        result_filename = payload.get("filename")
+
+        if result_filename == filename:
+            continue
+
+        results.append({
+            "filename": result_filename,
+            "score": result["score"],
+            "width": payload.get("width"),
+            "height": payload.get("height"),
+            "aspectRatio": payload.get("aspectRatio"),
+            "fileSize": payload.get("fileSize"),
+            "format": payload.get("format"),
+        })
+
+    results = results[:limit]
+
+    logging.info(f"Found {len(results)} similar images for {filename}")
     return results
