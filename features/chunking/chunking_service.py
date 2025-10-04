@@ -1,8 +1,9 @@
 import logging
+import re
 import numpy as np
 import spacy
 from typing import List
-from unmarkd import unmark
+from strip_markdown import strip_markdown
 from sklearn.metrics.pairwise import cosine_similarity
 from commons.qdrant.qdrant_helper import embed_texts
 
@@ -12,14 +13,22 @@ MIN_SENTENCES_PER_CHUNK = 2
 MAX_SENTENCES_PER_CHUNK = 10
 MIN_CHUNK_LENGTH = 20
 
+
 nlp = spacy.load("en_core_web_sm")
+
+code_fence_regex = re.compile(r'(?s)```[^`]*```')
+markdown_url_regex = re.compile(r'!?\[([^\]]*)\]\([^)]+\)')
+url_regex = re.compile(r'https?://[^\s]+')
 
 
 def chunk_note(content: str) -> List[str]:
     if not content.strip():
         return []
 
-    content = unmark(content)
+    content = code_fence_regex.sub('', content)
+    content = markdown_url_regex.sub(r'\1', content) # preserve alt text
+    content = url_regex.sub('', content)
+    content = strip_markdown(content)
     content = content.strip()
 
     if not content:
